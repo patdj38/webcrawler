@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"path"
 	"regexp"
 
 	"golang.org/x/net/html"
@@ -15,6 +16,8 @@ type Node struct {
 	Url      string
 	Children []*Node
 }
+
+var q_regexp = regexp.MustCompile(`.*\?.*`)
 
 var full_url_map = make(map[string]string)
 
@@ -47,13 +50,18 @@ func Sitemap(url string, baseurl *url.URL, node *Node) ([]string, error) {
 	list := getLinks(resp.Body, url, baseurl, node)
 
 	for i, c := range list {
+		fmt.Printf("pat Add base is %s\n", path.Base(c))
+		if q_regexp.MatchString(path.Base(c)) {
+			fmt.Printf("Pat Add we skip url:%s\n", c)
+			continue
+		}
 		Sitemap(c, baseurl, node.Children[i])
 	}
 	return nil, nil
 }
 
 func getLinks(body io.Reader, parent string, baseUrl *url.URL, node *Node) []string {
-	fmt.Printf("Pat Add in getlinks url=%s\n", baseUrl)
+	fmt.Printf("Pat Add in getlinks url=%s\n", parent)
 
 	var links []string
 	z := html.NewTokenizer(body)
