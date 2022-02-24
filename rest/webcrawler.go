@@ -1,11 +1,10 @@
-package main
+package rest
 
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
-	"os"
-
 	"pat/urls"
 )
 
@@ -25,24 +24,11 @@ func printNode(node *urls.Node, n int) {
 	}
 }
 
-func scanUrl(myurl string, baseurl *url.URL, node *urls.Node) []string {
-	scan_token <- struct{}{} // we wait to acquire a token
-	fmt.Printf("Pat Add in scanUrl url=%s\n", myurl)
-	list, err := urls.Sitemap(myurl, baseurl, node)
-	<-scan_token // no it's time to release our token
+func (s *Server) webCrawler(w http.ResponseWriter, r *http.Request) {
 
-	if err != nil {
-		log.Print(err)
-	}
-	printNode(node, 0)
-	return list
-}
-
-func main() {
-	if len(os.Args) != 2 {
-		log.Fatal("You have to provide a root url to start crawling")
-	}
-	baseurl := os.Args[1]
+	baseurl := "https://www.google.com"
+	baseurl = "https://www.google.com/doodles/royal-wedding"
+	//	fmt.Printf("Pat Add on est la \n")
 	base, err := url.Parse(baseurl)
 	if err != nil {
 		log.Fatal(err)
@@ -55,19 +41,38 @@ func main() {
 	var n int = 1
 
 	//give arg[1:]  as a list of Urls (will contains only args[1] at least in a first time
-	go func() { urls <- os.Args[1:] }()
+	go func() { urls <- []string{baseurl} }()
 
 	alreadyScanned := make(map[string]bool)
 	for ; n > 0; n-- {
+		//		fmt.Printf("Pat Add puis on est la \n")
+
 		list := <-urls
 		for _, url := range list {
+
 			if !alreadyScanned[url] {
 				n++
 				alreadyScanned[url] = true
 				go func(url string) {
+
 					urls <- scanUrl(url, base, &root)
 				}(url)
 			}
 		}
 	}
+
+	encodeJSONResponse(w, r, root)
+}
+
+func scanUrl(myurl string, baseurl *url.URL, node *urls.Node) []string {
+	scan_token <- struct{}{} // we wait to acquire a token
+	fmt.Printf("Pat Add in scanUrl url=%s\n", myurl)
+	list, err := urls.Sitemap(myurl, baseurl, node)
+	<-scan_token // no it's time to release our token
+
+	if err != nil {
+		log.Print(err)
+	}
+	printNode(node, 0)
+	return list
 }

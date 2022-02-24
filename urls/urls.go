@@ -70,7 +70,6 @@ func getLinks(body io.Reader, parent string, baseUrl *url.URL, node *Node) []str
 
 		switch token {
 		case html.ErrorToken:
-			//todo: urls list shoudn't contain duplicates
 			return links
 		case html.StartTagToken, html.EndTagToken:
 			token := z.Token()
