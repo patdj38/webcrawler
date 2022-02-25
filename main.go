@@ -8,8 +8,6 @@ import (
 	"pat/rest"
 )
 
-const webCrawlerAPIDefaultServerCommand string = "webCrawler"
-
 var cfgFile = ""
 
 func initConfig() {

@@ -129,7 +129,7 @@ func recoverHandler(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				fmt.Errorf("panic: %+v", err)
+				fmt.Errorf("panic: %s", err)
 				fmt.Errorf("The corresponding stack is\n%s", debug.Stack())
 				rerr := &Error{ID: "internal_server_error", Status: 500, Title: "Internal Server Error", Detail: fmt.Sprint(err)}
 				writeError(w, r, rerr)
